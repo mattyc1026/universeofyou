@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Universe of You</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1420;
+    --cream: #f5f0e8;
+    --gold: #c9a84c;
+    --blush: #d4856a;
+    --sage: #7a9e87;
+    --dusk: #8b7fa8;
+    --paper: #ede8dc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield */
+  #stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    from { opacity: var(--a1); transform: scale(1); }
+    to   { opacity: var(--a2); transform: scale(1.4); }
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; width: 100%; max-width: 700px; padding: 40px 24px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; animation: fadeUp .6s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── INTRO ── */
+  #intro { justify-content: center; min-height: 100vh; text-align: center; }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .18em;
+    color: var(--gold);
+    opacity: .8;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+  .big-title {
+    font-size: clamp(52px, 12vw, 88px);
+    font-weight: 300;
+    line-height: .96;
+    letter-spacing: -.01em;
+    margin-bottom: 8px;
+  }
+  .big-title em { font-style: italic; color: var(--gold); }
+  .subtitle {
+    font-size: 18px;
+    font-style: italic;
+    color: var(--cream);
+    opacity: .6;
+    margin: 24px 0 48px;
+    line-height: 1.6;
+  }
+  .name-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .name-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--gold);
+    opacity: .7;
+    text-transform: uppercase;
+  }
+  input[type="text"] {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(201,168,76,.4);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-style: italic;
+    padding: 4px 8px;
+    width: 180px;
+    outline: none;
+    text-align: center;
+    transition: border-color .3s;
+  }
+  input[type="text"]::placeholder { opacity: .3; }
+  input[type="text"]:focus { border-color: var(--gold); }
+
+  .btn-primary {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    letter-spacing: .08em;
+    padding: 14px 44px;
+    cursor: pointer;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: translateX(-101%);
+    transition: transform .3s;
+    z-index: 0;
+  }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary:hover { color: var(--ink); }
+  .btn-primary span { position: relative; z-index: 1; }
+
+  /* ── PROGRESS ── */
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,.1);
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--gold);
+    transition: width .6s ease;
+  }
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--gold);
+    opacity: .6;
+    white-space: nowrap;
+  }
+
+  /* ── PROMPT CARD ── */
+  #prompt-screen { padding-top: 60px; }
+  .card-container { width: 100%; perspective: 1000px; }
+  .card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 2px;
+    padding: 48px 44px 40px;
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(201,168,76,.15);
+    transform-style: preserve-3d;
+    transition: transform .08s ease;
+  }
+  .card-corner {
+    position: absolute;
+    top: 16px; right: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--gold);
+    opacity: .6;
+  }
+  .card-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: white;
+    padding: 4px 10px;
+    margin-bottom: 24px;
+    border-radius: 1px;
+  }
+  .card-prompt {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 300;
+    line-height: 1.3;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .card-prompt em { font-style: italic; color: var(--blush); }
+  .card-subtext {
+    font-size: 14px;
+    font-style: italic;
+    color: #6b6060;
+    margin-bottom: 36px;
+    line-height: 1.5;
+  }
+
+  /* Choice grid */
+  .choices {
+    display: grid;
+    gap: 10px;
+  }
+  .choices.cols-2 { grid-template-columns: 1fr 1fr; }
+  .choices.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .choices.cols-4 { grid-template-columns: 1fr 1fr; }
+
+  .choice-btn {
+    border: 1.5px solid rgba(26,20,32,.15);
+    background: white;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all .25s;
+    border-radius: 1px;
+    line-height: 1.3;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .choice-btn .emoji { display: block; font-size: 26px; margin-bottom: 6px; }
+  .choice-btn:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  }
+  .choice-btn.selected {
+    border-color: transparent;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.2);
+  }
+  .choice-btn.selected .emoji { filter: grayscale(0); }
+
+  /* Scale prompt */
+  .scale-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .scale-row { display: flex; align-items: center; gap: 14px; }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 12px; font-style: italic; color: #888; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: rgba(26,20,32,.15);
+    outline: none;
+    border-radius: 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+  .scale-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 300;
+    min-width: 36px;
+    text-align: right;
+    color: var(--ink);
+  }
+
+  /* Build prompt (free-form tappable words) */
+  .word-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .word-chip {
+    border: 1px solid rgba(26,20,32,.2);
+    background: white;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-style: italic;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+  }
+  .word-chip:hover { background: var(--ink); color: white; border-color: var(--ink); }
+  .word-chip.picked {
+    color: white;
+    border-color: transparent;
+  }
+  .chosen-display {
+    min-height: 44px;
+    border-bottom: 1px solid rgba(26,20,32,.15);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--ink);
+    padding: 8px 0;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .chosen-hint { font-size: 12px; font-style: italic; color: #999; }
+
+  /* Card bottom actions */
+  .card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    gap: 12px;
+  }
+  .btn-next {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    letter-spacing: .06em;
+    padding: 14px 36px;
+    border: none;
+    cursor: pointer;
+    transition: all .25s;
+    opacity: .5;
+    pointer-events: none;
+  }
+  .btn-next.ready {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .btn-next.ready:hover { background: var(--blush); }
+  .reflection-label {
+    font-size: 13px;
+    font-style: italic;
+    color: #888;
+    max-width: 200px;
+    line-height: 1.4;
+  }
+
+  /* ── CELEBRATION ── */
+  #celebration { justify-content: center; min-height: 100vh; text-align: center; }
+  .love-note {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 52px 44px;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,.5);
+    margin-bottom: 48px;
+  }
+  .love-note-title {
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+  }
+  .portrait-line {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .portrait-line strong { font-style: normal; font-weight: 400; }
+  .divider {
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+    margin: 28px auto;
+    opacity: .5;
+  }
+  .closing-words {
+    font-size: 15px;
+    color: #777;
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .replay-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.2);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    letter-spacing: .1em;
+    padding: 12px 32px;
+    cursor: pointer;
+    transition: all .3s;
+  }
+  .replay-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 1px;
+    pointer-events: none;
+    animation: fall linear forwards;
+    z-index: 999;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div id="app">
+
+  <!-- INTRO -->
+  <div class="screen active" id="intro">
+    <p class="eyebrow">a portrait in moments</p>
+    <h1 class="big-title">The Universe<br>of <em>You</em></h1>
+    <p class="subtitle">Not questions. Not answers.<br>A world you build together.</p>
+    <div class="name-row">
+      <span class="name-label">for</span>
+      <input type="text" id="name-input" placeholder="his name" maxlength="20" autocomplete="off">
+    </div>
+    <button class="btn-primary" id="start-btn" onclick="startGame()"><span>Begin the Portrait →</span></button>
+  </div>
+
+  <!-- PROMPT SCREEN -->
+  <div class="screen" id="prompt-screen">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+      <span class="progress-label" id="prog-label">1 / 8</span>
+    </div>
+    <div class="card-container">
+      <div class="card" id="card" onmousemove="tiltCard(event)" onmouseleave="resetTilt()">
+        <span class="card-corner" id="card-corner"></span>
+        <div id="card-tag" class="card-tag"></div>
+        <p class="card-prompt" id="card-prompt"></p>
+        <p class="card-subtext" id="card-subtext"></p>
+        <div id="card-input-area"></div>
+        <div class="card-actions">
+          <p class="reflection-label" id="reflection-label"></p>
+          <button class="btn-next" id="btn-next" onclick="nextPrompt()">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELEBRATION -->
+  <div class="screen" id="celebration">
+    <p class="eyebrow">you see him</p>
+    <div class="love-note">
+      <p class="love-note-title">✦ Portrait Complete ✦</p>
+      <div class="portrait-line" id="portrait-output"></div>
+      <div class="divider"></div>
+      <p class="closing-words" id="closing-words"></p>
+    </div>
+    <button class="replay-btn" onclick="restartGame()">Paint another portrait ↺</button>
+  </div>
+
+</div>
+
+<script>
+// ── STARFIELD ──
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+const STARS = Array.from({length: 180}, () => ({
+  x: Math.random(), y: Math.random(),
+  r: Math.random() * 1.2 + .2,
+  a: Math.random(),
+  speed: Math.random() * .003 + .001,
+  phase: Math.random() * Math.PI * 2
+}));
+let t = 0;
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  t += .008;
+  STARS.forEach(s => {
+    const alpha = s.a * (.5 + .5 * Math.sin(t * s.speed * 60 + s.phase));
+    ctx.beginPath();
+    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// ── CARD TILT ──
+function tiltCard(e) {
+  const card = document.getElementById('card');
+  const r = card.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const dx = (e.clientX - cx) / (r.width/2);
+  const dy = (e.clientY - cy) / (r.height/2);
+  card.style.transform = `rotateY(${dx*4}deg) rotateX(${-dy*3}deg)`;
+}
+function resetTilt() {
+  document.getElementById('card').style.transform = '';
+}
+
+// ── PROMPTS ──
+let hisName = 'him';
+let currentIndex = 0;
+let answers = {};
+
+const tagColors = {
+  'inner world': '#8b7fa8',
+  'texture':     '#7a9e87',
+  'energy':      '#c9a84c',
+  'shadow':      '#d4856a',
+  'essence':     '#8b7fa8',
+  'time':        '#7a9e87',
+  'core':        '#c9a84c',
+  'love':        '#d4856a',
+};
+
+const prompts = [
+  {
+    id: 'weather',
+    tag: 'inner world',
+    prompt: (n) => `Right now, <em>${n}</em> is a kind of weather.`,
+    subtext: 'Close your eyes. What do you feel when you\'re with him? Pick the weather of his current soul.',
+    type: 'choice',
+    cols: 3,
+    choices: [
+      { emoji: '🌤', label: 'Warm with drifting clouds' },
+      { emoji: '🌩', label: 'Electric & building' },
+      { emoji: '🌙', label: 'Still, clear night' },
+      { emoji: '🌧', label: 'Soft, quiet rain' },
+      { emoji: '🌊', label: 'Rolling waves, restless' },
+      { emoji: '❄️', label: 'Crisp & focused' },
+    ],
+    reflection: (v) => `Tell him: "You feel like ${v.label.toLowerCase()} to me."`,
+  },
+  {
+    id: 'texture',
+    tag: 'texture',
+    prompt: (n) => `If you could <em>touch</em> ${n}'s personality,`,
+    subtext: 'What texture would it be? Trust the first thing that comes.',
+    type: 'choice',
+    cols: 2,
+    choices: [
+      { emoji: '🪵', label: 'Warm worn wood' },
+      { emoji: '🪨', label: 'Smooth cool stone' },
+      { emoji: '🧶', label: 'Soft tangled wool' },
+      { emoji: '🌿', label: 'Damp living moss' },
+      { emoji: '📜', label: 'Aged paper' },
+      { emoji: '🌊', label: 'Moving water' },
+    ],
+    reflection: (v) => `Share this with him and ask if it surprises him.`,
+  },
+  {
+    id: 'volume',
+    tag: 'energy',
+    prompt: (n) => `${n}'s energy in the room is at <em>what volume?</em>`,
+    subtext: 'Not volume of voice — the presence you feel. Drag to where he lives.',
+    type: 'scale',
+    min: 1, max: 10,
+    leftLabel: 'a quiet hum',
+    rightLabel: 'fills every corner',
+    reflection: (v) => `Think about what it means that it's at ${v}. When does it shift?`,
+  },
+  {
+    id: 'decade',
+    tag: 'time',
+    prompt: (n) => `${n} has a soul that belongs to a <em>different era.</em>`,
+    subtext: 'Not where he was born — where part of him lives.',
+    type: 'choice',
+    cols: 2,
+    choices: [
+      { emoji: '🏛', label: 'Ancient — philosophical, mythic' },
+      { emoji: '🕯', label: '1800s — romantic, soulful' },
+      { emoji: '🎷', label: '1940s–60s — cool, purposeful' },
+      { emoji: '🌻', label: '70s–80s — free, searching' },
+      { emoji: '💽', label: '90s–00s — raw, nostalgic' },
+      { emoji: '🔭', label: 'Future — beyond this time' },
+    ],
+    reflection: (v) => `Ask him: "Does ${v.label.toLowerCase()} feel true to you?"`,
+  },
+  {
+    id: 'words',
+    tag: 'essence',
+    prompt: (n) => `Build a constellation of <em>${n}.</em>`,
+    subtext: 'Pick as many words as feel true. These are the stars in his universe.',
+    type: 'wordpool',
+    words: ['tender','fierce','searching','rooted','restless','playful','deep','quiet','burning','gentle','complex','loyal','surprising','still','alive','patient','bold','soft','true','vast'],
+    reflection: (v) => `Read these aloud to him. Watch his face.`,
+  },
+  {
+    id: 'shadow',
+    tag: 'shadow',
+    prompt: (n) => `The thing ${n} carries that <em>most people don't see</em> —`,
+    subtext: 'You can see it. What weight does he hold quietly?',
+    type: 'choice',
+    cols: 2,
+    choices: [
+      { emoji: '🏔', label: 'High standards for himself' },
+      { emoji: '🌑', label: 'Old grief, still living' },
+      { emoji: '🚪', label: 'Fear of being truly known' },
+      { emoji: '🕊', label: 'A longing for peace' },
+      { emoji: '🔥', label: 'Passion with nowhere to go' },
+      { emoji: '🌱', label: 'A self still becoming' },
+    ],
+    reflection: (v) => `You don't have to say this one aloud. Just hold it gently.`,
+  },
+  {
+    id: 'gift',
+    tag: 'love',
+    prompt: (n) => `The gift ${n} gives <em>without knowing it</em> —`,
+    subtext: 'What does the world get just by having him in it?',
+    type: 'choice',
+    cols: 2,
+    choices: [
+      { emoji: '🌿', label: 'Steadiness when things shake' },
+      { emoji: '😂', label: 'Laughter, even in darkness' },
+      { emoji: '🔍', label: 'The truth, when it\'s hard' },
+      { emoji: '🤝', label: 'A feeling of being seen' },
+      { emoji: '💡', label: 'A new way of seeing things' },
+      { emoji: '🫶', label: 'Warmth that asks nothing back' },
+    ],
+    reflection: (v) => `Tell him this one. Out loud. Right now.`,
+  },
+  {
+    id: 'love-note',
+    tag: 'core',
+    prompt: (n) => `One thing you want ${n} to know about <em>how you see him</em> —`,
+    subtext: 'Pick the truest sentence. Not what you\'ve said — what lives in you unsaid.',
+    type: 'choice',
+    cols: 1,
+    choices: [
+      { emoji: '✨', label: 'You are more than you let yourself believe.' },
+      { emoji: '🌊', label: 'Your depth is one of the most beautiful things I know.' },
+      { emoji: '🔥', label: 'The way you care — it changes things.' },
+      { emoji: '🌙', label: 'I see you. All of you. And I choose this.' },
+      { emoji: '🏡', label: 'You are where I feel most like myself.' },
+    ],
+    reflection: (v) => `This is his. Say it out loud, or write it down and give it to him.`,
+  },
+];
+
+function startGame() {
+  const n = document.getElementById('name-input').value.trim();
+  hisName = n || 'him';
+  answers = {};
+  currentIndex = 0;
+  showScreen('prompt-screen');
+  renderPrompt();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+}
+
+function renderPrompt() {
+  const p = prompts[currentIndex];
+  const total = prompts.length;
+
+  // Progress
+  document.getElementById('prog-fill').style.width = `${(currentIndex / total) * 100}%`;
+  document.getElementById('prog-label').textContent = `${currentIndex + 1} / ${total}`;
+
+  // Card
+  document.getElementById('card-corner').textContent = `${currentIndex + 1}`;
+
+  const tag = document.getElementById('card-tag');
+  tag.textContent = p.tag;
+  tag.style.background = tagColors[p.tag] || '#888';
+
+  document.getElementById('card-prompt').innerHTML = p.prompt(hisName);
+  document.getElementById('card-subtext').textContent = p.subtext;
+  document.getElementById('reflection-label').textContent = '';
+
+  const area = document.getElementById('card-input-area');
+  area.innerHTML = '';
+
+  const next = document.getElementById('btn-next');
+  next.classList.remove('ready');
+  next.textContent = currentIndex === total - 1 ? 'Complete the Portrait ✦' : 'Next →';
+
+  if (p.type === 'choice') {
+    const grid = document.createElement('div');
+    grid.className = `choices cols-${p.cols === 1 ? 1 : p.cols === 3 ? 3 : 2}`;
+    p.choices.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = `<span class="emoji">${c.emoji}</span>${c.label}`;
+      btn.onclick = () => selectChoice(btn, p, c, grid);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+
+  } else if (p.type === 'scale') {
+    const wrap = document.createElement('div');
+    wrap.className = 'scale-wrap';
+    const row = document.createElement('div');
+    row.className = 'scale-row';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = p.min; slider.max = p.max; slider.value = 5;
+    const val = document.createElement('div');
+    val.className = 'scale-value';
+    val.textContent = '5';
+    slider.oninput = () => {
+      val.textContent = slider.value;
+      answers[p.id] = slider.value;
+      document.getElementById('reflection-label').textContent = p.reflection(slider.value);
+      next.classList.add('ready');
+    };
+    row.appendChild(slider); row.appendChild(val);
+    const labels = document.createElement('div');
+    labels.className = 'scale-labels';
+    labels.innerHTML = `<span>${p.leftLabel}</span><span>${p.rightLabel}</span>`;
+    wrap.appendChild(row); wrap.appendChild(labels);
+    area.appendChild(wrap);
+    // auto-ready after a moment
+    setTimeout(() => {
+      answers[p.id] = slider.value;
+      document.getElementById('reflection-label').textContent = p.reflection(slider.value);
+      next.classList.add('ready');
+    }, 600);
+
+  } else if (p.type === 'wordpool') {
+    const chosen = [];
+    const display = document.createElement('div');
+    display.className = 'chosen-display';
+    display.textContent = '…';
+    const hint = document.createElement('p');
+    hint.className = 'chosen-hint';
+    hint.textContent = 'tap to add · tap again to remove';
+    const pool = document.createElement('div');
+    pool.className = 'word-pool';
+    p.words.forEach(w => {
+      const chip = document.createElement('span');
+      chip.className = 'word-chip';
+      chip.textContent = w;
+      chip.onclick = () => {
+        const idx = chosen.indexOf(w);
+        if (idx === -1) {
+          chosen.push(w);
+          chip.classList.add('picked');
+          chip.style.background = tagColors['essence'];
+          chip.style.borderColor = tagColors['essence'];
+          chip.style.color = 'white';
+        } else {
+          chosen.splice(idx, 1);
+          chip.classList.remove('picked');
+          chip.style.background = '';
+          chip.style.borderColor = '';
+          chip.style.color = '';
+        }
+        display.textContent = chosen.length ? chosen.join(' · ') : '…';
+        answers[p.id] = chosen;
+        if (chosen.length >= 2) {
+          document.getElementById('reflection-label').textContent = p.reflection(chosen);
+          next.classList.add('ready');
+        } else {
+          next.classList.remove('ready');
+        }
+      };
+      pool.appendChild(chip);
+    });
+    area.appendChild(display);
+    area.appendChild(hint);
+    area.appendChild(pool);
+  }
+}
+
+function selectChoice(btn, p, c, grid) {
+  grid.querySelectorAll('.choice-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.background = '';
+    b.style.color = '';
+  });
+  btn.classList.add('selected');
+  btn.style.background = tagColors[p.tag] || '#888';
+  btn.style.color = 'white';
+  answers[p.id] = c;
+  document.getElementById('reflection-label').textContent = p.reflection(c);
+  document.getElementById('btn-next').classList.add('ready');
+}
+
+function nextPrompt() {
+  currentIndex++;
+  if (currentIndex >= prompts.length) {
+    showCelebration();
+  } else {
+    const card = document.getElementById('card');
+    card.style.animation = 'none';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-30px)';
+    setTimeout(() => {
+      renderPrompt();
+      card.style.transition = 'opacity .4s ease, transform .4s ease';
+      card.style.opacity = '1';
+      card.style.transform = '';
+      setTimeout(() => card.style.transition = '', 500);
+    }, 200);
+  }
+}
+
+function showCelebration() {
+  showScreen('celebration');
+  buildPortrait();
+  spawnConfetti();
+}
+
+function buildPortrait() {
+  const n = hisName;
+  const weather = answers['weather']?.label || 'something beautifully his own';
+  const texture = answers['texture']?.label?.toLowerCase() || 'something real';
+  const vol = answers['volume'] || '?';
+  const era = answers['decade']?.label?.toLowerCase() || 'another time';
+  const words = Array.isArray(answers['words']) ? answers['words'] : [];
+  const shadow = answers['shadow']?.label?.toLowerCase() || 'something tender';
+  const gift = answers['gift']?.label?.toLowerCase() || 'something rare';
+  const loveline = answers['love-note']?.label || '';
+
+  const out = document.getElementById('portrait-output');
+  out.innerHTML = `
+    <strong>${n}</strong> right now is like <em>${weather.toLowerCase()}</em> —
+    something you could reach out and feel as <em>${texture}</em>.
+    He fills a room at a <strong>${vol}</strong> out of 10,
+    a soul that carries echoes of <em>${era}</em>.
+    <br><br>
+    He is: <strong>${words.join(', ') || 'all of these things'}</strong>.
+    <br><br>
+    He quietly holds <em>${shadow}</em>,
+    and gives the world <em>${gift}</em> —
+    without even trying.
+  `;
+
+  document.getElementById('closing-words').innerHTML = loveline
+    ? `<em>"${loveline}"</em><br><br>That's what you see. That's who he is to you.`
+    : `You see him. Fully. That's a rare and beautiful thing.`;
+}
+
+function spawnConfetti() {
+  const colors = ['#c9a84c','#d4856a','#8b7fa8','#7a9e87','#f5f0e8'];
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '-10px';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (Math.random() * 2.5 + 1.5) + 's';
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5000);
+  }
+}
+
+function restartGame() {
+  currentIndex = 0;
+  answers = {};
+  document.getElementById('name-input').value = '';
+  showScreen('intro');
+}
+</script>
+</body>
+</html>
